@@ -19,5 +19,5 @@ jobs:
           npx http-server -p 8080 &
           sleep 5
           
-      - name: Create tunnel
-        run: lt --port 8080 --subdomain myproxytest
+      - name: Create tunnel (random subdomain)
+        run: lt --port 8080
