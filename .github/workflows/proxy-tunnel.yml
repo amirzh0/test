@@ -1,4 +1,4 @@
-name: Create Proxy Tunnel
+name: Create SOCKS5 Proxy for Telegram
 on: 
   workflow_dispatch:
 
@@ -6,18 +6,39 @@ jobs:
   proxy:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          
-      - name: Install localtunnel
-        run: npm install -g localtunnel
-        
-      - name: Start web server
+      - name: Install dante-server
         run: |
-          npx http-server -p 8080 &
-          sleep 5
+          sudo apt-get update
+          sudo apt-get install -y dante-server
           
-      - name: Create tunnel (random subdomain)
-        run: lt --port 8080
+      - name: Configure SOCKS5 proxy
+        run: |
+          sudo bash -c 'cat > /etc/danted.conf << EOF
+          logoutput: /dev/stdout
+          internal: 0.0.0.0 port = 1080
+          external: eth0
+          method: none
+          client pass {
+            from: 0.0.0.0/0 to: 0.0.0.0/0
+            log: error
+          }
+          pass {
+            from: 0.0.0.0/0 to: 0.0.0.0/0
+            protocol: tcp udp
+          }
+          EOF'
+          
+      - name: Start SOCKS5 proxy
+        run: |
+          sudo danted
+          echo "SOCKS5 proxy running on port 1080"
+          
+      - name: Install bore for tunneling
+        run: |
+          curl -L -o bore https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-x86_64-unknown-linux-musl
+          chmod +x bore
+          
+      - name: Create public tunnel
+        run: |
+          echo "SOCKS5 Proxy Address:"
+          ./bore local 1080 --to bore.pub
