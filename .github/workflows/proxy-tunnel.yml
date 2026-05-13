@@ -1,4 +1,4 @@
-name: Create SOCKS5 Proxy for Telegram
+name: SOCKS5 Proxy for Telegram
 on: 
   workflow_dispatch:
 
@@ -14,15 +14,15 @@ jobs:
       - name: Configure SOCKS5 proxy
         run: |
           sudo bash -c 'cat > /etc/danted.conf << EOF
-          logoutput: /dev/stdout
+          logoutput: /var/log/danted.log
           internal: 0.0.0.0 port = 1080
           external: eth0
-          method: none
+          socksmethod: none
           client pass {
             from: 0.0.0.0/0 to: 0.0.0.0/0
             log: error
           }
-          pass {
+          socks pass {
             from: 0.0.0.0/0 to: 0.0.0.0/0
             protocol: tcp udp
           }
@@ -31,14 +31,17 @@ jobs:
       - name: Start SOCKS5 proxy
         run: |
           sudo danted
+          sleep 3
           echo "SOCKS5 proxy running on port 1080"
           
-      - name: Install bore for tunneling
+      - name: Install bore
         run: |
           curl -L -o bore https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-x86_64-unknown-linux-musl
           chmod +x bore
           
-      - name: Create public tunnel
+      - name: Create tunnel
         run: |
-          echo "SOCKS5 Proxy Address:"
+          echo "==================="
+          echo "SOCKS5 Proxy Details:"
+          echo "==================="
           ./bore local 1080 --to bore.pub
