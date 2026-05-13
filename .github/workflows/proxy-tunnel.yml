@@ -1,4 +1,4 @@
-name: SOCKS5 Proxy for Telegram
+name: Simple SOCKS5 Proxy
 on: 
   workflow_dispatch:
 
@@ -6,31 +6,16 @@ jobs:
   proxy:
     runs-on: ubuntu-latest
     steps:
-      - name: Install dante-server
+      - name: Download gost
         run: |
-          sudo apt-get update
-          sudo apt-get install -y dante-server
-          
-      - name: Configure SOCKS5 proxy
-        run: |
-          sudo bash -c 'cat > /etc/danted.conf << EOF
-          logoutput: /var/log/danted.log
-          internal: 0.0.0.0 port = 1080
-          external: eth0
-          socksmethod: none
-          client pass {
-            from: 0.0.0.0/0 to: 0.0.0.0/0
-            log: error
-          }
-          socks pass {
-            from: 0.0.0.0/0 to: 0.0.0.0/0
-            protocol: tcp udp
-          }
-          EOF'
+          wget https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-amd64-2.11.5.gz
+          gunzip gost-linux-amd64-2.11.5.gz
+          chmod +x gost-linux-amd64-2.11.5
+          sudo mv gost-linux-amd64-2.11.5 /usr/local/bin/gost
           
       - name: Start SOCKS5 proxy
         run: |
-          sudo danted
+          gost -L=socks5://:1080 &
           sleep 3
           echo "SOCKS5 proxy running on port 1080"
           
@@ -41,7 +26,11 @@ jobs:
           
       - name: Create tunnel
         run: |
-          echo "==================="
-          echo "SOCKS5 Proxy Details:"
-          echo "==================="
+          echo ""
+          echo "=========================================="
+          echo "🟢 SOCKS5 Proxy is Ready for Telegram!"
+          echo "=========================================="
+          echo ""
+          echo "Copy the address below and use in Telegram:"
+          echo ""
           ./bore local 1080 --to bore.pub
