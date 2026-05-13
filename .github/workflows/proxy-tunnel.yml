@@ -1,36 +1,16 @@
-name: Simple SOCKS5 Proxy
-on: 
-  workflow_dispatch:
+name: Simple SOCKS5
+on: workflow_dispatch
 
 jobs:
   proxy:
     runs-on: ubuntu-latest
     steps:
-      - name: Download gost
-        run: |
-          wget https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-amd64-2.11.5.gz
-          gunzip gost-linux-amd64-2.11.5.gz
-          chmod +x gost-linux-amd64-2.11.5
-          sudo mv gost-linux-amd64-2.11.5 /usr/local/bin/gost
-          
-      - name: Start SOCKS5 proxy
-        run: |
-          gost -L=socks5://:1080 &
-          sleep 3
-          echo "SOCKS5 proxy running on port 1080"
-          
-      - name: Install bore
-        run: |
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y microsocks
+          microsocks -p 1080 &
+          sleep 2
           curl -L -o bore https://github.com/ekzhang/bore/releases/download/v0.5.0/bore-x86_64-unknown-linux-musl
           chmod +x bore
-          
-      - name: Create tunnel
-        run: |
-          echo ""
-          echo "=========================================="
-          echo "🟢 SOCKS5 Proxy is Ready for Telegram!"
-          echo "=========================================="
-          echo ""
-          echo "Copy the address below and use in Telegram:"
-          echo ""
+          echo "Use this in Telegram:"
           ./bore local 1080 --to bore.pub
